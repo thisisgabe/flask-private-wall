@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>The WALL</title>
+</head>
+<body>
+    <div class="container my-4">
+        <header>
+            <nav class="navbar navbar-expand-md sticky-top navbar-dark bg-dark justify-content-between">
+                <a class="navbar-brand" href="/">MyWall</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText"
+                    aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarText">
+                    <span class="navbar-text">
+                        Welcome, {{data.user_name}}!!
+                    </span>
+                    <a href="/logout">Log Out</a>
+                </div>
+            </nav>
+        </header>
+        <div class="row my-3">
+            <div class="col border-right border-dark">
+                <h4><u>3 Messages(s) for You</u></h4>
+                <div class="card">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="card-body">
+                                <h5 class="card-title">Noelle said (3 hours ago)</h5>
+                                <p class="card-text ml-3">"I love Python! Don't you?"</p>
+                            </div>
+                            <div class="card-body align-bottom">
+                                <a href="/messages/del/id" class="btn btn-danger float-right">Del</a>
+                            </div>
+                        
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <h4><u>Send Messages</u></h4>
+                <p class="text-success">You have sent 12 messages so far.</p>
+                <div class="card">
+                            <div class="card-body">
+                                <form class="form" action="/messages/new" method="POST">
+                                    <div class="form-group row">
+                                        <label for="messageData" class="col-sm-2 col-form-label">Bill</label>
+                                        <div class="col-sm-10">
+                                            <textarea class="form-control" name="messageData" id="messageData" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-success float-right" id="btn-submit">Send Message</button>
+                                </form>
+                            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages() %}
+        <!-- declare a variable called messages -->
+        {% if messages %}
+        <!-- check if there are any messages -->
+        {% for message in messages %}
+        <!-- loop through the messages -->
+        <p style="color: red">{{message}}</p> <!-- display each message in a paragraph tag -->
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+</body>
+
+</html>

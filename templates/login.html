@@ -13,8 +13,13 @@
 <body>
     <div class="container-fluid my-4">
         <div class="row">
-            <div class="col-md-8 mx-auto">
-                <h1 class="mb-4">Login</h1>
+            <div class="col-md-6 mx-auto mb-4">
+                <h1>MyPrivateWall</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="card col-md-6 mx-auto">
+                <h1 class="my-4">Login</h1>
                 <form action="/login" method="POST">
                     <div class="form-group row">
                         <label for="emailAddressLogin" class="col-sm-2 col-form-label">Email Address</label>
@@ -37,20 +42,18 @@
                     </div>
                 </form>
                 <p>Don't Have an account? Register <a href="/register">Here</a></p>
+                {% with messages = get_flashed_messages() %}
+                <!-- declare a variable called messages -->
+                {% if messages %}
+                <!-- check if there are any messages -->
+                {% for message in messages %}
+                <!-- loop through the messages -->
+                <p style="color: red">{{message}}</p> <!-- display each message in a paragraph tag -->
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
             </div>
         </div>
-    </div>
-    <div class="container my-4">
-        {% with messages = get_flashed_messages() %}
-        <!-- declare a variable called messages -->
-        {% if messages %}
-        <!-- check if there are any messages -->
-        {% for message in messages %}
-        <!-- loop through the messages -->
-        <p style="color: red">{{message}}</p> <!-- display each message in a paragraph tag -->
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
     </div>
 </body>
 </html>

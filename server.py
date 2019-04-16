@@ -7,43 +7,60 @@ app = Flask(__name__)
 app.secret_key = 'ilikecoolstuffthatisfuntodo'
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]+$')
 bcrypt = Bcrypt(app)
-
-def getLanguages():
-   mysql = connectToMySQL("flask_survey")
-   return mysql.query_db("SELECT * FROM languages;")
-
-def getLocations():
-   mysql = connectToMySQL("flask_survey")
-   query = "SELECT * FROM locations;"
-   return mysql.query_db(query)
+db_name = "private_wall"
 
 def getUserById(id):
-   mysql = connectToMySQL("flask_login_reg")
+   mysql = connectToMySQL(db_name)
    query = "SELECT * FROM users WHERE id=%(id)s;"
    data = {
       "id": id
    }
-   return mysql.query_db(query, data)[0]
+   # python ternary - if exists, return, otherwise return None
+   user = mysql.query_db(query, data)
+   return user[0] if user else None
 
 def getUserByEmail(email):
-   mysql = connectToMySQL("flask_login_reg")
+   mysql = connectToMySQL(db_name)
    query = "SELECT * FROM users WHERE email_address=%(e)s;"
    data = {
       "e": email
    }
-   return mysql.query_db(query, data)[0]
+   # python ternary - if exists, return, otherwise return None
+   user = mysql.query_db(query, data)
+   return user[0] if user else None
 
-def getLocation(id):
-   mysql = connectToMySQL("flask_survey")
-   query = "SELECT * FROM locations WHERE id=%(id)s;"
+def getUsersOther(id):
+   # get all users that do not equal the id we pass
+   mysql = connectToMySQL(db_name)
+   query = "SELECT * FROM users WHERE id != %(id)s;"
    data = {
       "id": id
    }
-   return mysql.query_db(query, data)[0]
+   # python ternary - if exists, return, otherwise return None
+   user = mysql.query_db(query, data)
+   #return the data if exists, otherwise return None
+   return user if user else None
+
+#WIP
+def getUserMessages(id):
+   # get messages that belong to the user
+   mysql = connectToMySQL(db_name)
+   query = "SELECT * FROM messages WHERE fk_receiver != %(id)s;"
+   data = {
+      "id": id
+   }
+   # python ternary - if exists, return, otherwise return None
+   user = mysql.query_db(query, data)
+   #return the data if exists, otherwise return None
+   return user if user else None
 
 @app.route('/')
 def index():
-   return render_template("index.html")
+   if(session.get("isLoggedIn")):
+      return redirect('/wall')
+   else:
+      return render_template("login.html")
+
 
 @app.route('/logout')
 def logout():
@@ -51,17 +68,22 @@ def logout():
    flash("Successfully Logged out!", "status")
    return redirect('/')
 
-@app.route('/success')
-def success():
+@app.route('/wall')
+def wall():
    if(session.get("isLoggedIn")):
       user = getUserById(session["myUserId"])
       data = {
          'user_name' : user["first_name"] + " " + user["last_name"] + "!"
       }
-      return render_template("success.html", success_data = data)
+      return render_template("wall.html", data = data)
    else:
       flash("You must be logged in to access this page.", "status")
       return redirect('/')
+
+@app.route('/register')
+def register():
+   return render_template("register.html")
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -91,10 +113,10 @@ def login():
          flash("Successfully Logged in!")
          session["myUserId"] = user["id"]
          session["isLoggedIn"] = True
-         return redirect('/success')
+         return redirect('/wall')
 
-@app.route('/register', methods=['POST'])
-def result():
+@app.route('/register_user', methods=['POST'])
+def register_user():
    print('user submitted form')
    print(request.form)
    query = """INSERT INTO users (first_name, last_name, email_address, password) 
@@ -123,15 +145,10 @@ def result():
          'email': request.form["emailAddress"],
          'password': bcrypt.generate_password_hash(request.form["passwordMain"])
       }
-      mysql = connectToMySQL("flask_login_reg")
+      mysql = connectToMySQL(db_name)
       user = mysql.query_db(query, values)
-      flash("email successfully added to database!")
-      session["myUserId"] = user
-      session["isLoggedIn"] = True
-      print(session["myUserId"])
-      return redirect('/success')
-   else:
-      return redirect('/logout')
+      flash("Successfully registered! Please log in to access the wall!")
+   return redirect('/')
 
 if __name__ == "__main__":
    app.run(debug=True)
