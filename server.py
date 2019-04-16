@@ -36,10 +36,9 @@ def getUsersOther(id):
    data = {
       "id": id
    }
+   users = mysql.query_db(query, data)
    # python ternary - if exists, return, otherwise return None
-   user = mysql.query_db(query, data)
-   #return the data if exists, otherwise return None
-   return user if user else None
+   return users if users else None
 
 #WIP
 def getUserMessages(id):
@@ -49,10 +48,21 @@ def getUserMessages(id):
    data = {
       "id": id
    }
-   # python ternary - if exists, return, otherwise return None
    user = mysql.query_db(query, data)
-   #return the data if exists, otherwise return None
+   # python ternary - if exists, return, otherwise return None
    return user if user else None
+
+def sendUserMessage(sender_id, receiver_id, message):
+   mysql = connectToMySQL(db_name)
+   query = """INSERT INTO messages (fk_sender, fk_receiver, message) 
+               VALUES (%(sen)s, %(rec)s, %(mes)s);"""
+   data = {
+      "sen": sender_id,
+      "rec": receiver_id,
+      "mes": message
+   }
+   sent_message = mysql.query_db(query, data)
+   return sent_message if sent_message else None
 
 @app.route('/')
 def index():
@@ -72,8 +82,13 @@ def logout():
 def wall():
    if(session.get("isLoggedIn")):
       user = getUserById(session["myUserId"])
+      other_users = getUsersOther(session["myUserId"])
+      my_messages = getUserMessages(session["myUserId"])
       data = {
-         'user_name' : user["first_name"] + " " + user["last_name"] + "!"
+         'full_name' : user["first_name"] + " " + user["last_name"],
+         'user_id' : session["myUserId"],
+         'users': other_users,
+         'messages': my_messages
       }
       return render_template("wall.html", data = data)
    else:
@@ -114,6 +129,24 @@ def login():
          session["myUserId"] = user["id"]
          session["isLoggedIn"] = True
          return redirect('/wall')
+
+@app.route('/messages/new', methods=['POST'])
+def insert_message():
+   print('user submitted form')
+   print(request.form)
+   if(session.get("isLoggedIn")):
+      print('user logged in, adding new message')
+      valid = sendUserMessage(session["myUserId"], int(request.form["receiverId"]), request.form["messageData"])
+      if(valid):
+         flash('Message sent to user!', 'message')
+         return redirect('/wall')
+      else:
+         flash('Error sending message', 'message')
+         return redirect('/')
+   else:
+      flash('You cannot access this page without being logged in.')
+      return redirect('/')
+
 
 @app.route('/register_user', methods=['POST'])
 def register_user():

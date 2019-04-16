@@ -28,7 +28,7 @@
                 </button>
                 <div class="collapse navbar-collapse" id="navbarText">
                     <span class="navbar-text">
-                        Welcome, {{data.user_name}}!!
+                        Welcome, {{data.full_name}}!!
                     </span>
                     <a href="/logout">Log Out</a>
                 </div>
@@ -55,23 +55,24 @@
             <div class="col">
                 <h4><u>Send Messages</u></h4>
                 <p class="text-success">You have sent 12 messages so far.</p>
+                {% for user in data.users %}
                 <div class="card">
-                            <div class="card-body">
-                                <form class="form" action="/messages/new" method="POST">
-                                    <div class="form-group row">
-                                        <label for="messageData" class="col-sm-2 col-form-label">Bill</label>
-                                        <div class="col-sm-10">
-                                            <textarea class="form-control" name="messageData" id="messageData" rows="2"></textarea>
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-success float-right" id="btn-submit">Send Message</button>
-                                </form>
+                    <div class="card-body">
+                        <form class="form" action="/messages/new" method="POST">
+                            <div class="form-group row">
+                                <label for="messageData" class="col-sm-2 col-form-label">{{user.first_name}}</label>
+                                <div class="col-sm-10">
+                                    <textarea class="form-control" name="messageData" id="messageData" rows="2"></textarea>
+                                </div>
+                                <input type="hidden" name="receiverId" value="{{user.id}}">
                             </div>
+                            <button type="submit" class="btn btn-success float-right" id="btn-submit">Send Message</button>
+                        </form>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
         </div>
-    </div>
-    <div class="container mt-4">
         {% with messages = get_flashed_messages() %}
         <!-- declare a variable called messages -->
         {% if messages %}
