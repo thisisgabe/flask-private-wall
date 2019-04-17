@@ -54,7 +54,8 @@ def getUserMessages():
    mysql = connectToMySQL(db_name)
    query = """SELECT m.id as message_id, m.message, m.created, u.first_name as sender_name FROM messages m
                LEFT JOIN users u on u.id = m.fk_sender
-               WHERE m.fk_receiver = %(id)s AND m.deleted IS NULL;"""
+               WHERE m.fk_receiver = %(id)s AND m.deleted IS NULL
+               ORDER BY m.created DESC;"""
    # query = """SELECT * FROM messages WHERE fk_receiver != %(id)s;"""
    data = {
       "id": session["myUserId"]
