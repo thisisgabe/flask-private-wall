@@ -36,27 +36,34 @@
         </header>
         <div class="row my-3">
             <div class="col border-right border-dark">
-                <h4><u>3 Messages(s) for You</u></h4>
-                <div class="card">
+                {% if data.messages != None %}
+                <h4><u>{{data.messages|length }} Messages(s) for You</u></h4>
+                {% for message in data.messages %}
+                <div class="card mb-2">
                     <div class="container-fluid">
                         <div class="row">
                             <div class="card-body">
-                                <h5 class="card-title">Noelle said (3 hours ago)</h5>
-                                <p class="card-text ml-3">"I love Python! Don't you?"</p>
+                                <h5 class="card-title">Message from {{message.sender_name}}</h5>
+                                <h6>{{message.created.strftime("%b %w, %Y at %-I:%M %p")}}</h6>
+                                <p class="card-text ml-3">"{{message.message}}"</p>
                             </div>
-                            <div class="card-body align-bottom">
-                                <a href="/messages/del/id" class="btn btn-danger float-right">Del</a>
+                            <div class="card-body">
+                                <a href="/messages/{{message.message_id}}/delete" class="btn btn-danger float-right">Del</a>
                             </div>
                         
                         </div>
                     </div>
                 </div>
+                {% endfor %}
+                {% else %}
+                <h4><u>No Messages for You</u></h4>
+                {% endif %}
             </div>
             <div class="col">
                 <h4><u>Send Messages</u></h4>
-                <p class="text-success">You have sent 12 messages so far.</p>
+                <p class="text-success">You have sent {{data.sent_messages}} messages so far.</p>
                 {% for user in data.users %}
-                <div class="card">
+                <div class="card mb-2">
                     <div class="card-body">
                         <form class="form" action="/messages/new" method="POST">
                             <div class="form-group row">

@@ -3,12 +3,14 @@ from mysqlconnection import connectToMySQL
 from flask_bcrypt import Bcrypt
 import re
 
+# GLOBAL VARIABLES
 app = Flask(__name__)
 app.secret_key = 'ilikecoolstuffthatisfuntodo'
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]+$')
 bcrypt = Bcrypt(app)
 db_name = "private_wall"
 
+# DB LOGIC (MY OWN ORM YAY)
 def getUserById(id):
    mysql = connectToMySQL(db_name)
    query = "SELECT * FROM users WHERE id=%(id)s;"
@@ -32,7 +34,10 @@ def getUserByEmail(email):
 def getUsersOther(id):
    # get all users that do not equal the id we pass
    mysql = connectToMySQL(db_name)
-   query = "SELECT * FROM users WHERE id != %(id)s;"
+   query = """SELECT * 
+               FROM users 
+               WHERE id != %(id)s
+               ORDER BY first_name;"""
    data = {
       "id": id
    }
@@ -40,17 +45,39 @@ def getUsersOther(id):
    # python ternary - if exists, return, otherwise return None
    return users if users else None
 
-#WIP
-def getUserMessages(id):
-   # get messages that belong to the user
+# get messages that belong to the user
+def getUserMessages():
+   # don't do anything if logged in
+   if(not session.get("isLoggedIn")):
+      flash("You'll shoot your eye out kid")
+      redirect('/')
    mysql = connectToMySQL(db_name)
-   query = "SELECT * FROM messages WHERE fk_receiver != %(id)s;"
+   query = """SELECT m.id as message_id, m.message, m.created, u.first_name as sender_name FROM messages m
+               LEFT JOIN users u on u.id = m.fk_sender
+               WHERE m.fk_receiver = %(id)s AND m.deleted IS NULL;"""
+   # query = """SELECT * FROM messages WHERE fk_receiver != %(id)s;"""
+   data = {
+      "id": session["myUserId"]
+   }
+   messages = mysql.query_db(query, data)
+   # python ternary - if exists, return, otherwise return None
+   return messages if messages else None
+
+#delete message with certain id
+def delUserMessage(id):
+   # don't do anything if logged in
+   if(not session.get("isLoggedIn")):
+      flash("You'll shoot your eye out kid")
+      redirect('/')
+   mysql = connectToMySQL(db_name)
+   query = """UPDATE messages
+               SET deleted = NOW()
+               WHERE id = %(id)s;"""
    data = {
       "id": id
    }
-   user = mysql.query_db(query, data)
-   # python ternary - if exists, return, otherwise return None
-   return user if user else None
+   mysql.query_db(query, data)
+   return True
 
 def sendUserMessage(sender_id, receiver_id, message):
    mysql = connectToMySQL(db_name)
@@ -64,6 +91,22 @@ def sendUserMessage(sender_id, receiver_id, message):
    sent_message = mysql.query_db(query, data)
    return sent_message if sent_message else None
 
+# return the number of messages the user has sent (regardless if it was deleted)
+def getNumSentMessages(id):
+   mysql = connectToMySQL(db_name)
+   query = """SELECT COUNT(fk_sender) as count
+            FROM messages
+            WHERE fk_sender = %(id)s;"""
+   data = {
+      "id": id
+   }
+   num = mysql.query_db(query, data)[0]
+   return num["count"]
+
+# Helper functions
+
+
+# Routes
 @app.route('/')
 def index():
    if(session.get("isLoggedIn")):
@@ -83,12 +126,14 @@ def wall():
    if(session.get("isLoggedIn")):
       user = getUserById(session["myUserId"])
       other_users = getUsersOther(session["myUserId"])
-      my_messages = getUserMessages(session["myUserId"])
+      my_messages = getUserMessages()
+      sent_messages = getNumSentMessages(session["myUserId"])
       data = {
          'full_name' : user["first_name"] + " " + user["last_name"],
          'user_id' : session["myUserId"],
          'users': other_users,
-         'messages': my_messages
+         'messages': my_messages,
+         'sent_messages': sent_messages
       }
       return render_template("wall.html", data = data)
    else:
@@ -134,6 +179,9 @@ def login():
 def insert_message():
    print('user submitted form')
    print(request.form)
+   if(len(request.form["messageData"]) < 5):
+      flash("message must be at least 5 characters long", "message")
+      redirect('/')
    if(session.get("isLoggedIn")):
       print('user logged in, adding new message')
       valid = sendUserMessage(session["myUserId"], int(request.form["receiverId"]), request.form["messageData"])
@@ -147,6 +195,15 @@ def insert_message():
       flash('You cannot access this page without being logged in.')
       return redirect('/')
 
+@app.route('/messages/<id>/delete')
+def delete_message(id):
+   if(session.get("isLoggedIn")):
+      delUserMessage(id)
+      flash("Message deleted!", 'message')
+      return redirect('/')
+   else:
+      flash("You'll shoot your eye out kid")
+      return redirect('/')
 
 @app.route('/register_user', methods=['POST'])
 def register_user():
