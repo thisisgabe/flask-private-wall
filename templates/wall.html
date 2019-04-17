@@ -27,14 +27,18 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarText">
-                    <span class="navbar-text">
-                        Welcome, {{data.full_name}}!!
-                    </span>
-                    <a href="/logout">Log Out</a>
+                        <ul class="navbar-nav mr-auto">
+                        
+                        </ul>
+
+                        <span class="navbar-text">
+                            Welcome, {{data.full_name}}!!
+                        </span>
+                        <a class="ml-2" href="/logout">Log Out</a>
                 </div>
             </nav>
         </header>
-        <div class="row my-3">
+        <div class="row my-3 mx-0">
             <div class="col border-right border-dark">
                 {% if data.messages != None %}
                 <h4><u>{{data.messages|length }} Messages(s) for You</u></h4>
